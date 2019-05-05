@@ -168,8 +168,8 @@ int main(void)
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
-  dbinfo("Device UUID:[%04x-%04x-%04x]\r\n",
-  	HAL_GetUIDw0(),HAL_GetUIDw1(),HAL_GetUIDw2());
+  //dbinfo("Device UUID:[%04x-%04x-%04x]\r\n",
+  	//HAL_GetUIDw0(),HAL_GetUIDw1(),HAL_GetUIDw2());
   uart_hdl = (jd_om_comm *)jd_om_malloc(sizeof(jd_om_comm));
   all_task_resource_init(uart_hdl);
   uart_comm_task_init(uart_hdl,4);	//uart single wire
