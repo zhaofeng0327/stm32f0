@@ -25,6 +25,8 @@
 #include "stptlc.h"
 #endif
 
+#define UART_BUFFER_SIZE 512
+
 typedef QueueHandle_t JD_OM_QUEUE;
 typedef SemaphoreHandle_t JD_OM_SEM;
 typedef SemaphoreHandle_t JD_OM_MUTEX;

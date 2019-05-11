@@ -41,7 +41,7 @@ static int uart_read(void *fd,u8 * buf, int lens) {
 }
 
 static int uart_write(void *fd,u8 * buf, int lens) {
-	int ret = jz_uart_write_ex(fd, buf, lens,UartTimeOut(3000)/*3 second*/);
+	int ret = jz_uart_write_ex(fd, buf, lens);
 	return ret;
 }
 

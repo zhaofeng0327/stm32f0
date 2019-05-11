@@ -2788,7 +2788,10 @@ HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart)
 /**
   * @}
   */
-
+void HAL_UART_IDLE_IRQHandler(UART_HandleTypeDef *huart)
+{
+	HAL_UART_RxIdleCpltCallback(huart);
+}
 /**
   * @}
   */

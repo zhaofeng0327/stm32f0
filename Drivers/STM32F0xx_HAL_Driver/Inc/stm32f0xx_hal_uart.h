@@ -1316,6 +1316,7 @@ void HAL_UART_IRQHandler(UART_HandleTypeDef *huart);
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart);
 void HAL_UART_TxHalfCpltCallback(UART_HandleTypeDef *huart);
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart);
+void HAL_UART_RxIdleCpltCallback(UART_HandleTypeDef *huart);
 void HAL_UART_RxHalfCpltCallback(UART_HandleTypeDef *huart);
 void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart);
 void HAL_UART_AbortCpltCallback (UART_HandleTypeDef *huart);
@@ -1368,6 +1369,7 @@ HAL_StatusTypeDef UART_Transmit_IT(UART_HandleTypeDef *huart);
 HAL_StatusTypeDef UART_EndTransmit_IT(UART_HandleTypeDef *huart);
 HAL_StatusTypeDef UART_Receive_IT(UART_HandleTypeDef *huart);
 HAL_StatusTypeDef UART_WaitOnFlagUntilTimeout(UART_HandleTypeDef *huart, uint32_t Flag, FlagStatus Status, uint32_t Tickstart, uint32_t Timeout);
+void HAL_UART_IDLE_IRQHandler(UART_HandleTypeDef *huart);
 
 /**
   * @}

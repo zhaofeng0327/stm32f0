@@ -129,6 +129,7 @@ resend:
 		if( tlc->exit ){
 			break;
 		}
+		memset(sendbuf,0,TLC_FRAME_SIZE);
 		int cplens = 0;
 		tlc_hd *phd = (tlc_hd*)sendbuf;
 		phd->src_addr 	= tlc->local_addr;

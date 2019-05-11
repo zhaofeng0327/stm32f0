@@ -431,7 +431,7 @@ int uart_comm_task_init(jd_om_comm *uart_hdl,int usart_no)
 		vTaskSuspend(NULL);
 	}
 
-	uart_hdl->uart_comm_des.thread_handle_recv = jd_om_thread_create("Uart_recv_queue_task", uart_recv_queue_task, uart_hdl, 5*1024/*configMINIMAL_STACK_SIZE + 10*/, recv_queue_task_PRIORITY);
+	uart_hdl->uart_comm_des.thread_handle_recv = jd_om_thread_create("Uart_recv_queue_task", uart_recv_queue_task, uart_hdl, 1024/*configMINIMAL_STACK_SIZE + 10*/, recv_queue_task_PRIORITY);
 	if(uart_hdl->uart_comm_des.thread_handle_recv == NULL){
 		dzlog_error("create recv thread fail.\r\n");
         while (1)

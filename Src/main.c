@@ -49,6 +49,9 @@ TIM_HandleTypeDef htim6;
 UART_HandleTypeDef huart3;
 UART_HandleTypeDef huart4;
 UART_HandleTypeDef huart6;
+DMA_HandleTypeDef hdma_usart3_rx;
+DMA_HandleTypeDef hdma_usart3_tx;
+DMA_HandleTypeDef hdma_usart4_rx;
 
 bool is_transparent_mode = pdFALSE;
 /* USER CODE BEGIN PV */
@@ -58,6 +61,7 @@ bool is_transparent_mode = pdFALSE;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_DMA_Init(void);
 static void MX_USART4_UART_Init(void);
 static void MX_USART6_UART_Init(void);
 static void MX_USART3_UART_Init(void);
@@ -145,6 +149,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_USART4_UART_Init();//uart single wire
   MX_USART6_UART_Init();//debug
   MX_USART3_UART_Init();//communication with pc
@@ -168,8 +173,8 @@ int main(void)
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
-  //dbinfo("Device UUID:[%04x-%04x-%04x]\r\n",
-  	//HAL_GetUIDw0(),HAL_GetUIDw1(),HAL_GetUIDw2());
+  dbinfo("Device UUID:[%04x-%04x-%04x]\r\n",
+  	HAL_GetUIDw0(),HAL_GetUIDw1(),HAL_GetUIDw2());
   uart_hdl = (jd_om_comm *)jd_om_malloc(sizeof(jd_om_comm));
   all_task_resource_init(uart_hdl);
   uart_comm_task_init(uart_hdl,4);	//uart single wire
@@ -254,7 +259,7 @@ static void MX_TIM6_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN TIM6_Init 2 */
-
+  HAL_TIM_Base_Start_IT(&htim6);
   /* USER CODE END TIM6_Init 2 */
 
 }
@@ -294,7 +299,6 @@ static void MX_USART3_UART_Init(void)
 
 }
 
-extern uint8_t aRxBuffer4;
 /**
   * @brief USART4 Initialization Function
   * @param None
@@ -325,7 +329,7 @@ static void MX_USART4_UART_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN USART4_Init 2 */
-  HAL_UART_Receive_IT(&huart4, (uint8_t *)&aRxBuffer4, 1);
+
   /* USER CODE END USART4_Init 2 */
 
 }
@@ -365,6 +369,24 @@ static void MX_USART6_UART_Init(void)
 
 }
 
+/** 
+  * Enable DMA controller clock
+  */
+static void MX_DMA_Init(void) 
+{
+  /* DMA controller clock enable */
+  __HAL_RCC_DMA1_CLK_ENABLE();
+
+  /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 3, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
+  /* DMA1_Channel2_3_IRQn interrupt configuration */
+  HAL_NVIC_SetPriority(DMA1_Channel2_3_IRQn, 3, 0);
+  HAL_NVIC_EnableIRQ(DMA1_Channel2_3_IRQn);
+
+}
+
 /**
   * @brief GPIO Initialization Function
   * @param None
@@ -395,13 +417,13 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : KEY1_Pin */
   GPIO_InitStruct.Pin = KEY1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(KEY1_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : KEY2_Pin */
   GPIO_InitStruct.Pin = KEY2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(KEY2_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : LED1_Pin LED2_Pin LED3_Pin */
