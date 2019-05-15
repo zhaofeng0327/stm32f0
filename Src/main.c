@@ -173,7 +173,7 @@ int main(void)
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
   /* USER CODE END RTOS_QUEUES */
-  dbinfo("Device UUID:[%04x-%04x-%04x]\r\n",
+  dbinfo("app version:%s,Device UUID:[%04x-%04x-%04x]\r\n",APP_VER,
   	HAL_GetUIDw0(),HAL_GetUIDw1(),HAL_GetUIDw2());
   uart_hdl = (jd_om_comm *)jd_om_malloc(sizeof(jd_om_comm));
   all_task_resource_init(uart_hdl);

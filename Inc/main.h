@@ -32,7 +32,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#define APP_VER	"1.0.0"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
