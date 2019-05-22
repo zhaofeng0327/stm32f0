@@ -94,7 +94,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	if(GPIO_Pin == GPIO_PIN_2){
 		debug("%s:PIN_2 is pushed\r\n",__func__);
 	}
-	else if(GPIO_Pin == GPIO_PIN_6){
+	else if(GPIO_Pin == GPIO_PIN_6){	//used for ID.
 		debug("%s:PIN_6 is pushed\r\n",__func__);
 	}
 }
@@ -116,7 +116,13 @@ static int all_task_resource_init(jd_om_comm *hdl)
 		return -1;
 	}
 
-	is_transparent_mode = pdFALSE;
+	if(HAL_GPIO_ReadPin(GPIOC,GPIO_PIN_6) == GPIO_PIN_RESET)
+		is_transparent_mode = pdTRUE;
+	else
+		is_transparent_mode = pdFALSE;
+
+	debug("------------>system is in %s mode.\r\n",is_transparent_mode?"jig":"virtual-batt");
+	
 	return 0;
 }
 
