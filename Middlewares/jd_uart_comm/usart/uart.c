@@ -8,7 +8,7 @@
 #include <stdarg.h>
 
 //#define UART_COMM_DBG
-//#define UART_HALF_DUPLEX_RX_DMA
+#define UART_HALF_DUPLEX_RX_DMA
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
@@ -238,7 +238,7 @@ void HAL_UART_RxIdleCpltCallback(UART_HandleTypeDef *huart)
                 uart_recv_data_show(__func__,huart,uart3_rx_buffer, uart3_rx_len);
 				#endif
 				if(uart3_rx_len == 0){
-					dberr("%s:invalid data len ?\r\n",__func__);
+					dberr("%s:uart3 recv invalid data len ?\r\n",__func__);
 				}
                 else if(is_transparent_mode){
 					jz_uart_write_ex(&huart4, (uint8_t *)&uart3_rx_buffer, uart3_rx_len);//将收到的信息发送出去
@@ -249,8 +249,6 @@ void HAL_UART_RxIdleCpltCallback(UART_HandleTypeDef *huart)
 					HAL_UART_Transmit_DMA(&huart3,uart3_tx_buffer, uart3_rx_len);
 					#endif
 				}
-				uart3_rx_len = 0;
-				memset(uart3_rx_buffer,0x00,UART_BUFFER_SIZE);
 				HAL_UART_Receive_DMA(huart,uart3_rx_buffer,UART_BUFFER_SIZE);//重新打开DMA接收
 	        }
       }
@@ -273,19 +271,18 @@ void HAL_UART_RxIdleCpltCallback(UART_HandleTypeDef *huart)
 			  uart_recv_data_show(__func__,huart,uart4_rx_buffer,uart4_rx_len);
 			  #endif
 			  if(uart4_rx_len == 0){
-				dberr("%s:invalid data len ?\r\n",__func__);
+				dberr("%s:uart4 single-wire recv invalid data len ?\r\n",__func__);
+				HAL_UART_Receive_DMA(huart,uart4_rx_buffer,UART_BUFFER_SIZE);//重新打开DMA接收
 			  }
               else if(is_transparent_mode){
 			  	Tx3Started = pdTRUE;
 			  	memcpy(uart3_tx_buffer,uart4_rx_buffer,uart4_rx_len);
 				HAL_UART_Transmit_DMA(&huart3,uart3_tx_buffer, uart4_rx_len);
-				uart4_rx_len = 0;
-				memset(uart4_rx_buffer,0x00,UART_BUFFER_SIZE);
 				HAL_UART_Receive_DMA(huart,uart4_rx_buffer,UART_BUFFER_SIZE);//重新打开DMA接收 
 			  }
 			  else{
 			  	#ifdef UART_COMM_DBG
-				jz_uart_write_ex(&huart4, (uint8_t *)&uart4_rx_buffer, uart4_rx_len);
+				jz_uart_write_ex(huart, (uint8_t *)&uart4_rx_buffer, uart4_rx_len);
 				#else
 				osMutexRelease(UartRxSem4);
 				#endif
@@ -320,6 +317,7 @@ int jz_uart_write_ex(void *fd, u8 * buffer, int lens)
 	if (USART4 == ins) {	//single wire
 		HAL_HalfDuplex_EnableReceiver(hdl);
 		#ifdef UART_HALF_DUPLEX_RX_DMA
+		__HAL_UART_CLEAR_IDLEFLAG(hdl);//清除标志位
 		HAL_UART_Receive_DMA(hdl,uart4_rx_buffer,UART_BUFFER_SIZE);//重新打开DMA接收 
 		#else
 		HAL_UART_Receive_IT(hdl, (uint8_t *)&aRxBuffer4, 1);
@@ -373,11 +371,16 @@ void * jz_uart_init_ex(int usart_no)
 				dberr("%s:create usart4 semaphore fail.\r\n",__func__);
 				return NULL;
 			}
+			//enable uart3 mode
 			uart3_rx_len = 0;
+			__HAL_UART_CLEAR_IDLEFLAG(&huart3);//清除标志位
 			__HAL_UART_ENABLE_IT(&huart3, UART_IT_IDLE);  //使能idle中断
 			HAL_UART_Receive_DMA(&huart3,uart3_rx_buffer,UART_BUFFER_SIZE);//使能接收中断
+			//enable uart4 half signle-wire mode
 			uart4_rx_len = 0;
+			HAL_HalfDuplex_EnableReceiver(&huart4);
 			#ifdef UART_HALF_DUPLEX_RX_DMA
+			__HAL_UART_CLEAR_IDLEFLAG(&huart4);//清除标志位
 			__HAL_UART_ENABLE_IT(&huart4, UART_IT_IDLE);  //使能idle中断
 			HAL_UART_Receive_DMA(&huart4,uart4_rx_buffer,UART_BUFFER_SIZE);//使能接收中断
 			#else
