@@ -238,7 +238,9 @@ void HAL_UART_RxIdleCpltCallback(UART_HandleTypeDef *huart)
                 uart_recv_data_show(__func__,huart,uart3_rx_buffer, uart3_rx_len);
 				#endif
 				if(uart3_rx_len == 0){
+					#ifdef UART_COMM_DBG
 					dberr("%s:uart3 recv invalid data len ?\r\n",__func__);
+					#endif
 				}
                 else if(is_transparent_mode){
 					jz_uart_write_ex(&huart4, (uint8_t *)&uart3_rx_buffer, uart3_rx_len);//将收到的信息发送出去
@@ -271,7 +273,9 @@ void HAL_UART_RxIdleCpltCallback(UART_HandleTypeDef *huart)
 			  uart_recv_data_show(__func__,huart,uart4_rx_buffer,uart4_rx_len);
 			  #endif
 			  if(uart4_rx_len == 0){
+			  	#ifdef UART_COMM_DBG
 				dberr("%s:uart4 single-wire recv invalid data len ?\r\n",__func__);
+				#endif
 				HAL_UART_Receive_DMA(huart,uart4_rx_buffer,UART_BUFFER_SIZE);//重新打开DMA接收
 			  }
               else if(is_transparent_mode){
@@ -310,8 +314,11 @@ int jz_uart_write_ex(void *fd, u8 * buffer, int lens)
 		ret = lens;
 		Tx4Started = pdFALSE;
 	}
-	else
+	else{
+		#ifdef UART_COMM_DBG
 		dberr("%s:error\r\n",__func__);
+		#endif
+	}
 	//SET_BIT(huart2.Instance->CR1, USART_CR1_RE_Pos);
 
 	if (USART4 == ins) {	//single wire
