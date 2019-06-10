@@ -96,18 +96,20 @@ int stpllc_read(stpllc * hw,u8 * pdata,int lens) {
 		int retl = uart_read(hw->fd,buf,LLC_PACK_SZ_MAX);
 		if( retl > 0 ){
 			hw->cache_lens = retl;
-		}	
+		}
 	}
 
-	// debug("recv raw --- \r\n");
 
 	if ( hw->cache_lens > 0) {
+
+		debug("recv raw --- \r\n");
+		dump_buffer(buf, hw->cache_lens);
 
 		int i;
 		for (i = 0; i < hw->cache_lens;) {
 
 			frame[hw->frame_lens++] = buf[i++];
-			
+
 			if(stpllc_req_dev_name_by_AT(buf[i-1])){
 				debug("%s:get req dev name by at command\r\n",__func__);
 				#if 1
@@ -119,11 +121,11 @@ int stpllc_read(stpllc * hw,u8 * pdata,int lens) {
 				return (int)strlen(ReqNameByAT);
 				#endif
 			}
-			
+
 			if ( buf[i-1] == SYNCHD ) {
 				hw->frame_lens = 1;
 			} else if (buf[i-1] == SYNCEOF) {
-				
+
 				if ( hw->frame_lens > 3 ) {
 
 					if( lens >= (hw->frame_lens-3 ) ){//必须要能装下

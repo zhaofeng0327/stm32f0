@@ -33,7 +33,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
- 
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -69,7 +69,7 @@ extern UART_HandleTypeDef huart6;
 /* USER CODE END EV */
 
 /******************************************************************************/
-/*           Cortex-M0 Processor Interruption and Exception Handlers          */ 
+/*           Cortex-M0 Processor Interruption and Exception Handlers          */
 /******************************************************************************/
 /**
   * @brief This function handles Non maskable interrupt.
@@ -98,7 +98,6 @@ void HardFault_Handler(void)
     /* USER CODE END W1_HardFault_IRQn 0 */
   }
 }
-
 /**
   * @brief This function handles System tick timer.
   */
@@ -202,10 +201,12 @@ void USART3_6_IRQHandler(void)
   /* USER CODE END USART3_6_IRQn 0 */
   HAL_UART_IRQHandler(&huart3);
   HAL_UART_IRQHandler(&huart4);
-  HAL_UART_IRQHandler(&huart6);
   /* USER CODE BEGIN USART3_6_IRQn 1 */
+#if 0
+  HAL_UART_IRQHandler(&huart6);
   HAL_UART_IDLE_IRQHandler(&huart3);
   HAL_UART_IDLE_IRQHandler(&huart4);
+#endif
   /* USER CODE END USART3_6_IRQn 1 */
 }
 

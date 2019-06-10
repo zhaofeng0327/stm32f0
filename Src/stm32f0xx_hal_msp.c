@@ -2,7 +2,7 @@
 /**
   ******************************************************************************
   * File Name          : stm32f0xx_hal_msp.c
-  * Description        : This file provides code for the MSP Initialization 
+  * Description        : This file provides code for the MSP Initialization
   *                      and de-Initialization codes.
   ******************************************************************************
   * @attention
@@ -37,7 +37,7 @@ extern DMA_HandleTypeDef hdma_usart4_rx;
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN Define */
- 
+
 /* USER CODE END Define */
 
 /* Private macro -------------------------------------------------------------*/
@@ -150,11 +150,11 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
   /* USER CODE END USART3_MspInit 0 */
     /* Peripheral clock enable */
     __HAL_RCC_USART3_CLK_ENABLE();
-  
+
     __HAL_RCC_GPIOC_CLK_ENABLE();
-    /**USART3 GPIO Configuration    
+    /**USART3 GPIO Configuration
     PC4     ------> USART3_TX
-    PC5     ------> USART3_RX 
+    PC5     ------> USART3_RX
     */
     GPIO_InitStruct.Pin = GPIO_PIN_4|GPIO_PIN_5;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -162,7 +162,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF1_USART3;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
+#if 0
     /* USART3 DMA Init */
     /* USART3_RX Init */
     hdma_usart3_rx.Instance = DMA1_Channel1;
@@ -199,7 +199,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     __HAL_DMA1_REMAP(HAL_DMA1_CH2_USART3_TX);
 
     __HAL_LINKDMA(huart,hdmatx,hdma_usart3_tx);
-
+#endif
     /* USART3 interrupt Init */
     HAL_NVIC_SetPriority(USART3_6_IRQn, 3, 0);
     HAL_NVIC_EnableIRQ(USART3_6_IRQn);
@@ -214,10 +214,10 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
   /* USER CODE END USART4_MspInit 0 */
     /* Peripheral clock enable */
     __HAL_RCC_USART4_CLK_ENABLE();
-  
+
     __HAL_RCC_GPIOA_CLK_ENABLE();
-    /**USART4 GPIO Configuration    
-    PA0     ------> USART4_TX 
+    /**USART4 GPIO Configuration
+    PA0     ------> USART4_TX
     */
     GPIO_InitStruct.Pin = GPIO_PIN_0;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_OD;
@@ -225,7 +225,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
     GPIO_InitStruct.Alternate = GPIO_AF4_USART4;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
+#if 0
     /* USART4 DMA Init */
     /* USART4_RX Init */
     hdma_usart4_rx.Instance = DMA1_Channel3;
@@ -244,7 +244,7 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
     __HAL_DMA1_REMAP(HAL_DMA1_CH3_USART4_RX);
 
     __HAL_LINKDMA(huart,hdmarx,hdma_usart4_rx);
-
+#endif
     /* USART4 interrupt Init */
     HAL_NVIC_SetPriority(USART3_6_IRQn, 3, 0);
     HAL_NVIC_EnableIRQ(USART3_6_IRQn);
@@ -259,11 +259,11 @@ void HAL_UART_MspInit(UART_HandleTypeDef* huart)
   /* USER CODE END USART6_MspInit 0 */
     /* Peripheral clock enable */
     __HAL_RCC_USART6_CLK_ENABLE();
-  
+
     __HAL_RCC_GPIOC_CLK_ENABLE();
-    /**USART6 GPIO Configuration    
+    /**USART6 GPIO Configuration
     PC0     ------> USART6_TX
-    PC1     ------> USART6_RX 
+    PC1     ------> USART6_RX
     */
     GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
@@ -297,17 +297,17 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
   /* USER CODE END USART3_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_USART3_CLK_DISABLE();
-  
-    /**USART3 GPIO Configuration    
+
+    /**USART3 GPIO Configuration
     PC4     ------> USART3_TX
-    PC5     ------> USART3_RX 
+    PC5     ------> USART3_RX
     */
     HAL_GPIO_DeInit(GPIOC, GPIO_PIN_4|GPIO_PIN_5);
-
+#if 0
     /* USART3 DMA DeInit */
     HAL_DMA_DeInit(huart->hdmarx);
     HAL_DMA_DeInit(huart->hdmatx);
-
+#endif
     /* USART3 interrupt DeInit */
   /* USER CODE BEGIN USART3:USART3_6_IRQn disable */
     /**
@@ -328,15 +328,15 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
   /* USER CODE END USART4_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_USART4_CLK_DISABLE();
-  
-    /**USART4 GPIO Configuration    
-    PA0     ------> USART4_TX 
+
+    /**USART4 GPIO Configuration
+    PA0     ------> USART4_TX
     */
     HAL_GPIO_DeInit(GPIOA, GPIO_PIN_0);
-
+#if 0
     /* USART4 DMA DeInit */
     HAL_DMA_DeInit(huart->hdmarx);
-
+#endif
     /* USART4 interrupt DeInit */
   /* USER CODE BEGIN USART4:USART3_6_IRQn disable */
     /**
@@ -357,10 +357,10 @@ void HAL_UART_MspDeInit(UART_HandleTypeDef* huart)
   /* USER CODE END USART6_MspDeInit 0 */
     /* Peripheral clock disable */
     __HAL_RCC_USART6_CLK_DISABLE();
-  
-    /**USART6 GPIO Configuration    
+
+    /**USART6 GPIO Configuration
     PC0     ------> USART6_TX
-    PC1     ------> USART6_RX 
+    PC1     ------> USART6_RX
     */
     HAL_GPIO_DeInit(GPIOC, GPIO_PIN_0|GPIO_PIN_1);
 

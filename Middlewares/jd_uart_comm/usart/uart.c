@@ -7,8 +7,8 @@
 #include "main.h"
 #include <stdarg.h>
 
-//#define UART_COMM_DBG
-#define UART_HALF_DUPLEX_RX_DMA
+#define UART_COMM_DBG
+//#define UART_HALF_DUPLEX_RX_DMA
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
@@ -68,7 +68,7 @@ static HAL_StatusTypeDef HAL_UART_Transmit_Retry(UART_HandleTypeDef *huart, uint
 {
 	unsigned char retry_cnt = 3;
 	HAL_StatusTypeDef status;
-	
+
 	while(((status=HAL_UART_Transmit(huart,pData,Size,Timeout)) != HAL_OK) && (retry_cnt-- > 0)){
 		;
 	}
@@ -82,7 +82,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	static unsigned char loopcntrx4 = 0;
 	static unsigned char led_on = 0;
 	static unsigned char time_cnt = 0;
-	
+
 	if(htim->Instance == TIM6){
 		//100ms timeout.
 		if(Tx3Started){
@@ -112,7 +112,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		}
 		else
 			loopcnt4 = 0;
-		
+
 		#ifndef UART_HALF_DUPLEX_RX_DMA
 		if(Rx4Started){
 			if(loopcntrx4++>30){ //3s timeout
@@ -155,7 +155,7 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 #ifndef UART_HALF_DUPLEX_RX_DMA
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	
+
 	  /* Prevent unused argument(s) compilation warning */
 	  UNUSED(huart);
 
@@ -191,6 +191,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 					  #endif
 				  	  Rx4Started = pdFALSE;
 					  if(!is_transparent_mode){
+					  #if 0
 						#ifdef UART_COMM_DBG
 						  jz_uart_write_ex(&huart4, (uint8_t *)&uart4_rx_buffer, uart4_rx_len);
 						  uart4_rx_len = 0;
@@ -198,6 +199,9 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 						#else
 						  osMutexRelease(UartRxSem4);
 						#endif
+					  #else
+					  	osMutexRelease(UartRxSem4);
+					  #endif
 					  }
 					  else{
 						  Tx3Started = pdTRUE;
@@ -208,7 +212,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 					  }
 				  }
 			  }
-		  }  
+		  }
 		  HAL_UART_Receive_IT(huart, (uint8_t *)&aRxBuffer4, 1);   //再开启接收中断
 	  }
 }
@@ -222,17 +226,17 @@ void HAL_UART_RxIdleCpltCallback(UART_HandleTypeDef *huart)
 	  //debug("%s-------->\r\n",__func__);
       if(USART3 == huart->Instance){ //communication with PC
 	        tmp_flag =__HAL_UART_GET_FLAG(huart,UART_FLAG_IDLE); //获取IDLE标志位
-	                
+
 	        if((tmp_flag != RESET))//idle标志被置位
-	        { 
+	        {
 	        	#ifdef UART_COMM_DBG
 	        	debug("%s>>>>>>>>>uart3.\r\n",__func__);
 				#endif
-                __HAL_UART_CLEAR_IDLEFLAG(huart);//清除标志位         
-                HAL_UART_DMAStop(huart); //                                         
+                __HAL_UART_CLEAR_IDLEFLAG(huart);//清除标志位
+                HAL_UART_DMAStop(huart); //
                 temp = huart->Instance->ISR;  //清除状态寄存器SR,读取SR寄存器可以实现清除SR寄存器的功能
                 temp = huart->Instance->RDR; //读取数据寄存器中的数据
-                temp  =  __HAL_DMA_GET_COUNTER(&hdma_usart3_rx);// 获取DMA中未传输的数据个数，NDTR寄存器分析见下面                                         
+                temp  =  __HAL_DMA_GET_COUNTER(&hdma_usart3_rx);// 获取DMA中未传输的数据个数，NDTR寄存器分析见下面
                 uart3_rx_len =  UART_BUFFER_SIZE - temp; //总计数减去未传输的数据个数，得到已经接收的数据个数
                 #ifdef UART_COMM_DBG
                 uart_recv_data_show(__func__,huart,uart3_rx_buffer, uart3_rx_len);
@@ -247,8 +251,8 @@ void HAL_UART_RxIdleCpltCallback(UART_HandleTypeDef *huart)
 				}
 				else{
 					#ifdef UART_COMM_DBG
-					memcpy(uart3_tx_buffer,uart3_rx_buffer,uart3_rx_len);
-					HAL_UART_Transmit_DMA(&huart3,uart3_tx_buffer, uart3_rx_len);
+					//memcpy(uart3_tx_buffer,uart3_rx_buffer,uart3_rx_len);
+					//HAL_UART_Transmit_DMA(&huart3,uart3_tx_buffer, uart3_rx_len);
 					#endif
 				}
 				HAL_UART_Receive_DMA(huart,uart3_rx_buffer,UART_BUFFER_SIZE);//重新打开DMA接收
@@ -257,17 +261,17 @@ void HAL_UART_RxIdleCpltCallback(UART_HandleTypeDef *huart)
 	  else if(USART4 == huart->Instance){//single-wire
 	  	#ifdef UART_HALF_DUPLEX_RX_DMA
 		  tmp_flag =__HAL_UART_GET_FLAG(huart,UART_FLAG_IDLE); //获取IDLE标志位
-				  
+
 		  if((tmp_flag != RESET))//idle标志被置位
-		  { 
+		  {
 		  	  #ifdef UART_COMM_DBG
 		  	  debug("%s>>>>>>>>>uart4.\r\n",__func__);
 			  #endif
-			  __HAL_UART_CLEAR_IDLEFLAG(huart);//清除标志位		 
-			  HAL_UART_DMAStop(huart); //										  
+			  __HAL_UART_CLEAR_IDLEFLAG(huart);//清除标志位
+			  HAL_UART_DMAStop(huart); //
 			  temp = huart->Instance->ISR;	//清除状态寄存器SR,读取SR寄存器可以实现清除SR寄存器的功能
 			  temp = huart->Instance->RDR; //读取数据寄存器中的数据
-			  temp	=  __HAL_DMA_GET_COUNTER(&hdma_usart4_rx);// 获取DMA中未传输的数据个数，NDTR寄存器分析见下面										 
+			  temp	=  __HAL_DMA_GET_COUNTER(&hdma_usart4_rx);// 获取DMA中未传输的数据个数，NDTR寄存器分析见下面
 			  uart4_rx_len =  UART_BUFFER_SIZE - temp; //总计数减去未传输的数据个数，得到已经接收的数据个数
 			  #ifdef UART_COMM_DBG
 			  uart_recv_data_show(__func__,huart,uart4_rx_buffer,uart4_rx_len);
@@ -282,7 +286,7 @@ void HAL_UART_RxIdleCpltCallback(UART_HandleTypeDef *huart)
 			  	Tx3Started = pdTRUE;
 			  	memcpy(uart3_tx_buffer,uart4_rx_buffer,uart4_rx_len);
 				HAL_UART_Transmit_DMA(&huart3,uart3_tx_buffer, uart4_rx_len);
-				HAL_UART_Receive_DMA(huart,uart4_rx_buffer,UART_BUFFER_SIZE);//重新打开DMA接收 
+				HAL_UART_Receive_DMA(huart,uart4_rx_buffer,UART_BUFFER_SIZE);//重新打开DMA接收
 			  }
 			  else{
 			  	#ifdef UART_COMM_DBG
@@ -290,7 +294,7 @@ void HAL_UART_RxIdleCpltCallback(UART_HandleTypeDef *huart)
 				#else
 				osMutexRelease(UartRxSem4);
 				#endif
-			  } 
+			  }
 		  }
 		#endif
 	  }
@@ -310,7 +314,7 @@ int jz_uart_write_ex(void *fd, u8 * buffer, int lens)
 		Tx4Started = pdTRUE;
 	}
 
-	if(HAL_UART_Transmit_Retry(hdl, buffer, lens,UartTimeOut(1000)) == HAL_OK){	
+	if(HAL_UART_Transmit_Retry(hdl, buffer, lens,UartTimeOut(1000)) == HAL_OK){
 		ret = lens;
 		Tx4Started = pdFALSE;
 	}
@@ -325,7 +329,7 @@ int jz_uart_write_ex(void *fd, u8 * buffer, int lens)
 		HAL_HalfDuplex_EnableReceiver(hdl);
 		#ifdef UART_HALF_DUPLEX_RX_DMA
 		__HAL_UART_CLEAR_IDLEFLAG(hdl);//清除标志位
-		HAL_UART_Receive_DMA(hdl,uart4_rx_buffer,UART_BUFFER_SIZE);//重新打开DMA接收 
+		HAL_UART_Receive_DMA(hdl,uart4_rx_buffer,UART_BUFFER_SIZE);//重新打开DMA接收
 		#else
 		HAL_UART_Receive_IT(hdl, (uint8_t *)&aRxBuffer4, 1);
 		#endif
@@ -344,7 +348,7 @@ int jz_uart_read_ex(void *fd, u8 * buffer, int lens,uint32_t ulTimeout/*millisec
 	ret = uart4_rx_len;
 	memcpy(buffer,uart4_rx_buffer,ret);
     uart4_rx_len = 0;
-    memset(uart4_rx_buffer,0x00,UART_BUFFER_SIZE); //清空数组		 
+    memset(uart4_rx_buffer,0x00,UART_BUFFER_SIZE); //清空数组
 	if(ret < 3){
 		dberr("%s:recv less data of '%d' ???\r\n",__func__,ret);
 		ret = 0;
@@ -398,7 +402,7 @@ void * jz_uart_init_ex(int usart_no)
 
 		default:
 			dberr("%s:unknown usart num=%d\r\n",__func__,usart_no);
-			break;	
+			break;
 	}
 
 	return hdl;

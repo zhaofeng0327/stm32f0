@@ -25,18 +25,18 @@ typedef unsigned char u8;
 typedef unsigned short u16;
 typedef unsigned int u32;
 
-#define  configDebugPrintf   1
+#define  configDebugPrintf   0
 
 #if   (1 == configDebugPrintf)
-#define dberr print_usart//printf
-#define dbinfo print_usart//printf
-#define debug print_usart//printf
+#define dberr print_usart
+#define dbinfo print_usart
+#define debug print_usart
 #else
 #define dberr
 #define dbinfo
 #define debug
 #endif
 
-#define EXPORT_API 
+#define EXPORT_API
 
 #endif

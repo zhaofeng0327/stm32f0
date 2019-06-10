@@ -105,7 +105,7 @@ static int all_task_resource_init(jd_om_comm *hdl)
 		dberr("create send queue fail.\r\n");
 		return -1;
 	}
-	
+
 	if(jd_om_mq_create(&(hdl->uart_comm_des.recv_queue),MAX_QUEUE_SIZE) != osOK){
 		dberr("create recv queue fail.\r\n");
 		return -1;
@@ -122,7 +122,7 @@ static int all_task_resource_init(jd_om_comm *hdl)
 		is_transparent_mode = pdFALSE;
 
 	debug("------------>system is in %s mode.\r\n",is_transparent_mode?"jig":"virtual-batt");
-	
+
 	return 0;
 }
 
@@ -155,10 +155,10 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_DMA_Init();
-  MX_USART4_UART_Init();//uart single wire
+  //MX_DMA_Init();
+  //MX_USART4_UART_Init();//uart single wire
   MX_USART6_UART_Init();//debug
-  MX_USART3_UART_Init();//communication with pc
+  //MX_USART3_UART_Init();//communication with pc
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
 
@@ -181,9 +181,10 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
   dbinfo("app version:%s,Device UUID:[%04x-%04x-%04x]\r\n",APP_VER,
   	HAL_GetUIDw0(),HAL_GetUIDw1(),HAL_GetUIDw2());
-  uart_hdl = (jd_om_comm *)jd_om_malloc(sizeof(jd_om_comm));
-  all_task_resource_init(uart_hdl);
-  uart_comm_task_init(uart_hdl,4);	//uart single wire
+  //uart_hdl = (jd_om_comm *)jd_om_malloc(sizeof(jd_om_comm));
+  //all_task_resource_init(uart_hdl);
+  //uart_comm_task_init(uart_hdl,4);	//uart single wire
+  start_uart_service();
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -191,7 +192,7 @@ int main(void)
 
   /* Start scheduler */
   jd_om_thread_start();
-  
+
   /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
@@ -214,7 +215,7 @@ void SystemClock_Config(void)
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
 
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -226,7 +227,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB busses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1;
@@ -375,10 +376,10 @@ static void MX_USART6_UART_Init(void)
 
 }
 
-/** 
+/**
   * Enable DMA controller clock
   */
-static void MX_DMA_Init(void) 
+static void MX_DMA_Init(void)
 {
   /* DMA controller clock enable */
   __HAL_RCC_DMA1_CLK_ENABLE();
@@ -479,7 +480,7 @@ static void MX_GPIO_Init(void)
 /* USER CODE BEGIN Header_StartDefaultTask */
 /**
   * @brief  Function implementing the defaultTask thread.
-  * @param  argument: Not used 
+  * @param  argument: Not used
   * @retval None
   */
 /* USER CODE END Header_StartDefaultTask */
@@ -492,7 +493,7 @@ void StartDefaultTask(void const * argument)
   {
     osDelay(1);
   }
-  /* USER CODE END 5 */ 
+  /* USER CODE END 5 */
 }
 
 /**
@@ -516,7 +517,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(char *file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */

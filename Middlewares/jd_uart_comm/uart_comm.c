@@ -1,6 +1,7 @@
 #include "uart_comm.h"
 #include "typedef.h"
 #include "utils.h"
+#include "stm32f0xx_hal.h"
 
 
 #define dzlog_info debug
@@ -190,7 +191,8 @@ static char recv_data_dispatch(jd_om_comm *hdl,char *pt)
 	static unsigned char last_session_id = -1;
 	static unsigned int old_pkt_id = 1;
 	unsigned int payload_len = 0;
-	unsigned char type;
+	unsigned char type;
+
 	bool has_send_res = pdFALSE;
 
 	// 获取start字段
@@ -274,14 +276,14 @@ FREE:
 	if(has_send_res != pdTRUE){
 		if(is_req_type_valid(type)){
 			RES_COMMON_T res;
-			
+
 			dzlog_error("%s:command type '%02x' exception res start to send...\r\n",__func__,type);
 			res.code = 1;
 			jd_master_com_send_exception_response(hdl,type,(void *)&res);
 		}
 		else
 			dzlog_error("%s:[unknown type=%02x]won't send res as invalid packet received!!!\r\n",
-				__func__,type);			
+				__func__,type);
 	}
 	jd_om_free(pt);
 	return 0;
@@ -298,7 +300,7 @@ static void uart_recv_queue_task(void *p)
 	dzlog_debug("uart_recv_queue_task start>>>\r\n");
 	while (1) {
 		//dzlog_debug("%s:@@1@@\r\n",__func__);
-		jd_om_mq_recv(&(hdl->uart_comm_des.recv_queue), (void **)&pt, 1000/*millisecond timeout*/);		
+		jd_om_mq_recv(&(hdl->uart_comm_des.recv_queue), (void **)&pt, 1000/*millisecond timeout*/);
 		if(pt == NULL){
 			//dzlog_error("%s: timeout\r\n",__func__);
 		}
@@ -354,13 +356,13 @@ static void uart_send_queue_task(void *p)
 			continue;
 		}
 		#endif
-		
+
 		slave = head->slave;
 		sprintf(slave_addr, "0.%d.0", slave);
 		to_addr.addr = tlc_iaddr(slave_addr);
 
 		active_req = head->type;
-		
+
 		dzlog_debug("send msg type '%x'\r\n",res);
 		cnt_resend = 1;
 RESEND_DATA:
@@ -382,7 +384,7 @@ RESEND_DATA:
 		jd_om_free(pt);
 		if (send_err)
 			send_err_recovery(hdl,active_req);
-		else if(res == RES_BATT_SN_BMS){			
+		else if(res == RES_BATT_SN_BMS){
 			one_session_ok = (ret > 0)?pdTRUE:pdFALSE;
 			jd_om_sem_signal(&(hdl->uart_comm_des.sem));
 		}
@@ -400,7 +402,7 @@ static void uart_recv_task(void *p)
 	char buf[MAX_QUEUE_ELEMENT_SIZE] = { 0 };
 	char *pt;
 
-	dzlog_debug("uart_recv_task start>>>\r\n");
+	dzlog_debug("uart4_recv_task start>>>\r\n");
 
 	//task of receving.
 	while (1) {
@@ -410,15 +412,163 @@ static void uart_recv_task(void *p)
 		if ((r_len > sizeof(MSG_UART_HEAD_T)) ||
 			((r_len == strlen(ReqNameByAT)) && (strncmp(buf,ReqNameByAT,r_len)==0))) {
 			print_hex((char *)__func__,buf, r_len);
+#if 1
 			pt = jd_om_malloc(r_len);
 			memcpy(pt, buf, r_len);
 			jd_om_mq_send(&(uart_hdl->uart_comm_des.recv_queue), pt);
+
 			//dzlog_debug("%s:send recv queue end...\r\n",__func__);
+
+#else
+		MSG_UART_HEAD_T * head = (MSG_UART_HEAD_T*)buf;
+		if (REQ_BATT_SN_BMS == head->type)
+
+		RES_BATT_SN_BMS_T res;
+		char indicate[]="JieDianTestBattery";
+		res.code = 0;
+		res.sn_len = strlen(indicate);
+		strcpy((char *)res.sn,indicate);
+		//send response to host
+		one_session_ok = pdFALSE;
+		if(jd_master_com_send_response(uart_hdl,REQ_BATT_SN_BMS,(void *)&res) == osOK){
+			is_transparent_mode = one_session_ok;
+			debug("%s:response sn %s###################\r\n",__func__,
+				is_transparent_mode?"success,ready to entry transparent mode":"fail");
+		}
+
+#if 0
+			unsigned int payload_len = sizeof(RES_BATT_SN_BMS_T);
+			int packet_size = sizeof(MSG_UART_HEAD_T) + payload_len + CHECKSUM_SIZE;
+			char *pkt = jd_om_malloc(packet_size);
+
+			MSG_UART_HEAD_T *h = (MSG_UART_HEAD_T *)pkt;
+
+			h->start = START_CMD;
+			h->slave = SLAVE_1;
+			h->type = RES_BATT_SN_BMS;
+			h->payload_len = payload_len;
+
+			RES_BATT_SN_BMS_T *res = (RES_BATT_SN_BMS_T *)((char *)pkt + sizeof(MSG_UART_HEAD_T));
+			char *sn="JieDianTestBattery";
+			res->code = 0;
+			res->sn_len = strlen(sn);
+			strcpy((char *)res.sn,sn);
+
+			unsigned short chksum = crc16((char *)pkt, packet_size - CHECKSUM_SIZE);
+			memcpy((char *)pkt + packet_size - CHECKSUM_SIZE, &chksum, CHECKSUM_SIZE);
+
+			jd_om_comm_addr to_addr;
+			to_addr.addr = tlc_iaddr("0.1.0");
+
+			jd_om_send(uart_hdl, &to_addr, pkt, packet_size, 0);
+#endif
+#endif
 		}
 		else{
 			dzlog_error("recv msg from uart. invalid len:%d\r\n", r_len);
 		}
 	}
+}
+
+jd_om_comm uart_com3;
+jd_om_comm uart_com4;
+
+
+static void uart3_recv_task(void *p)
+{
+
+	dzlog_debug("uart3_recv_task start>>>\r\n");
+
+	while (1) {
+		uart3_read_ex();
+	}
+
+}
+
+
+int start_uart_service()
+{
+	if(jd_om_mq_create(&(uart_com4.uart_comm_des.send_queue),32) != osOK){
+		dberr("create send queue fail.\r\n");
+		return -1;
+	}
+
+	if(jd_om_mq_create(&(uart_com4.uart_comm_des.recv_queue),32) != osOK){
+		dberr("create recv queue fail.\r\n");
+		return -1;
+	}
+
+	if(jd_om_sem_new(&(uart_com4.uart_comm_des.sem)) != osOK){
+		dberr("create uart send completed semaphore fail.\r\n");
+		return -1;
+	}
+
+	int ret = jd_om_comm_open(&uart_com4, 4);
+	if (0 != ret) {
+		dzlog_error("open uart number %d fail ret %d.\r\n", 4, ret);
+		vTaskSuspend(NULL);
+	}
+
+	uart_com4.uart_comm_des.thread_handle_recv = jd_om_thread_create("Uart_recv_queue_task",
+		uart_recv_queue_task, &uart_com4, 1024*3, recv_queue_task_PRIORITY);
+	if(uart_com4.uart_comm_des.thread_handle_recv == NULL){
+		dzlog_error("create recv thread fail.\r\n");
+        while (1)
+            ;
+	}
+	dzlog_info("Uart_recv_queue_task create successful !\r\n");
+
+	uart_com4.uart_comm_des.thread_handle_send = jd_om_thread_create("Uart_send_queue_task",
+		uart_send_queue_task, &uart_com4, 1024, send_queue_task_PRIORITY);
+	if(uart_com4.uart_comm_des.thread_handle_send == NULL){
+		dzlog_error("create send thread fail.\r\n");
+        while (1)
+            ;
+	}
+	dzlog_info("Uart_send_queue_task create successful !\r\n");
+
+    if(jd_om_thread_create("Uart_recv_task", uart_recv_task, (void *)&uart_com4, 512, uart_task_PRIORITY)==NULL)
+    {
+        debug("create Uart4 recv Task failed!.\r\n");
+        while (1)
+            ;
+    }
+	dzlog_info("Uart4 recv task create successful !\r\n");
+#if 0
+	ret = jd_om_comm_open(&uart_com3, 3);
+	if (0 != ret) {
+		dzlog_error("open uart number %d fail ret %d.\r\n", 3, ret);
+		vTaskSuspend(NULL);
+	}
+
+
+    if(jd_om_thread_create("Uart_recv_task", uart3_recv_task, (void *)&uart_com3, 512, uart_task_PRIORITY)==NULL)
+    {
+        debug("create Uart3 recv Task failed!.\r\n");
+        while (1)
+            ;
+    }
+	dzlog_info("Uart3 recv task create successful !\r\n");
+#else
+
+    if(jd_om_thread_create("Uart3_recv_task", uart3_recv_task, 0, 256, uart_task_PRIORITY)==NULL)
+    {
+        debug("create Uart3 recv Task failed!.\r\n");
+        while (1)
+            ;
+    }
+	dzlog_info("Uart3 recv task create successful !\r\n");
+
+#endif
+
+
+	if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_6) == GPIO_PIN_RESET)
+		is_transparent_mode = pdTRUE;
+	else
+		is_transparent_mode = pdFALSE;
+
+	debug("------------>system is in %s mode.\r\n",is_transparent_mode?"jig":"virtual-batt");
+	return ret;
 }
 
 int uart_comm_task_init(jd_om_comm *uart_hdl,int usart_no)
@@ -438,7 +588,7 @@ int uart_comm_task_init(jd_om_comm *uart_hdl,int usart_no)
             ;
 	}
 	dzlog_info("Uart_recv_queue_task create successful !\r\n");
-	
+
 	uart_hdl->uart_comm_des.thread_handle_send = jd_om_thread_create("Uart_send_queue_task", uart_send_queue_task, uart_hdl, 1024/*configMINIMAL_STACK_SIZE + 10*/, send_queue_task_PRIORITY);
 	if(uart_hdl->uart_comm_des.thread_handle_send == NULL){
 		dzlog_error("create send thread fail.\r\n");

@@ -201,10 +201,10 @@ int jd_om_recv_f_batt(jd_om_comm * handle,
  *             JD_OM_THREAD对象:创建线程成功
 *              NULL:创建线程未成�?
 *****************************************************************/
-JD_OM_THREAD jd_om_thread_create( const char *pcName, 
-									void( *pxThread )( void *pvParameters ), 
-									void *pvArg, 
-									int iStackSize, 
+JD_OM_THREAD jd_om_thread_create( const char *pcName,
+									void( *pxThread )( void *pvParameters ),
+									void *pvArg,
+									int iStackSize,
 									int iPriority );
 
 void jd_om_thread_start(void);
@@ -252,7 +252,7 @@ osStatus jd_om_mutex_create(JD_OM_MUTEX *pxMutex);
 * Description:  �?
 *
 * Parameters:
-*              
+*
 *              JD_OM_MUTEX 对象
 *
 * Return:
