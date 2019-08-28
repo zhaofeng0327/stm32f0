@@ -105,7 +105,7 @@ osStatus jd_master_com_send_request(jd_om_comm *hdl,unsigned char type)
 }
 
 
-osStatus jd_master_com_send_response(jd_om_comm *hdl,unsigned char type, void *data)
+osStatus jd_master_com_send_response(jd_om_comm *hdl,unsigned char type, void *data, unsigned char packet_id)
 {
 	int payload_size;
 	unsigned char res_type;
@@ -130,6 +130,7 @@ osStatus jd_master_com_send_response(jd_om_comm *hdl,unsigned char type, void *d
 	pkt->head.slave = SLAVE_1;
 	pkt->head.type = res_type;
 	pkt->head.payload_len = payload_size;
+	pkt->head.packet_id = packet_id;
 
 	memcpy((char *)pkt + sizeof(MSG_UART_HEAD_T), (char *)data, payload_size);
 
@@ -259,7 +260,7 @@ static char recv_data_dispatch(jd_om_comm *hdl,char *pt)
 			strcpy((char *)res.sn,indicate);
 			//send response to host
 			one_session_ok = pdFALSE;
-			if(jd_master_com_send_response(hdl,type,(void *)&res) == osOK){
+			if(jd_master_com_send_response(hdl,type,(void *)&res, head->packet_id) == osOK){
 				is_transparent_mode = one_session_ok;
 				debug("%s:response sn %s###################\r\n",__func__,
 					is_transparent_mode?"success,ready to entry transparent mode":"fail");
